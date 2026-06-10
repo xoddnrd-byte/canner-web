@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PPL 착한기업 판별기</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        body { text-align: center; font-family: sans-serif; padding: 20px; }
+        #reader { width: 100%; max-width: 400px; margin: 0 auto; }
+        #result { margin-top: 20px; font-weight: bold; color: blue; font-size: 1.1rem; line-height: 1.5; }
+        .channel-tag { background-color: #ffeaa7; padding: 3px 8px; border-radius: 5px; font-size: 0.9rem; margin: 2px; display: inline-block; }
+        
+        /* 검색창 디자인 추가 */
+        .search-container { margin: 20px 0; }
+        #searchInput { padding: 10px; width: 60%; max-width: 250px; font-size: 1rem; border: 2px solid #ddd; border-radius: 5px; }
+        #searchBtn { padding: 10px 15px; font-size: 1rem; background-color: #ff7675; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        .product-card { border: 1px solid #ddd; padding: 10px; margin-top: 10px; border-radius: 8px; background-color: #f9f9f9; }
+    </style>
+</head>
+<body>
+
+    <h2>🔍 훌륭한 후원사 제품인지 확인하세요!</h2>
+    
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="제품명이나 브랜드 입력">
+        <button id="searchBtn" onclick="searchByName()">검색</button>
+    </div>
+
+    <div id="reader"></div>
+    <p id="result">서버에서 후원사 명단을 가져오는 중...</p>
+
+    <script>
+        let targetProducts = {};
+        const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTeoSJbfsOCxBdbwYf78EEk2H6ypyh_0Wt6u6JrScTwjpaXI-J73ick5EgGGvqmIpMSEsYW7y4A0y2f/pub?output=csv";
+
+        async function loadSheetData() {
+            try {
+                const response = await fetch(GOOGLE_SHEET_CSV_URL);
+                const csvText = await response.text();
+                const lines = csvText.split("\n");
+                
+                for (let i = 1; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (!line) continue;
+                    
+                    const parts = line.split(",");
+                    if (parts.length >= 3) {
+                        const barcode = parts[0].trim();
+                        const productName = parts[1].trim();
+                        const channelName = parts[2].trim();
+                        
+                        if (!targetProducts[barcode]) {
+                            targetProducts[barcode] = { name: productName, channels: [] };
+                        }
+                        if (!targetProducts[barcode].channels.includes(channelName)) {
+                            targetProducts[barcode].channels.push(channelName);
+                        }
+                    }
+                }
+                document.getElementById('result').innerText = "명단 로드 완료! 검색하거나 바코드를 스캔해 주세요.";
+                startScanner();
+            } catch (error) {
+                console.error("데이터 로드 실패:", error);
+                document.getElementById('result').innerText = "명단을 불러오지 못했습니다. 주소를 확인해주세요.";
+            }
+        }
+
+        // 3. ✨ 이름으로 검색하는 새로운 기능 ✨
+        function searchByName() {
+            const keyword = document.getElementById('searchInput').value.trim();
+            if (!keyword) {
+                alert("검색어를 입력해주세요!");
+                return;
+            }
+
+            let foundProducts = [];
+            
+            // 모든 제품 목록을 뒤지면서 검색어가 포함된 제품을 찾음
+            for (let barcode in targetProducts) {
+                let product = targetProducts[barcode];
+                // 제품명에 검색어가 포함되어 있으면(부분 일치) 결과에 추가
+                if (product.name.includes(keyword)) {
+                    foundProducts.push(product);
+                }
+            }
+
+            let resultArea = document.getElementById('result');
+
+            if (foundProducts.length > 0) {
+                let resultHTML = `🎉 <b>'${keyword}'</b> 검색 결과입니다!<br>`;
+                
+                // 검색된 제품들을 하나씩 예쁜 카드로 만듦
+                foundProducts.forEach(p => {
+                    let channelTags = p.channels.map(ch => `<span class="channel-tag">${ch}</span>`).join(" ");
+                    resultHTML += `
+                    <div class="product-card">
+                        <b>${p.name}</b><br>
+                        <div>${channelTags} 후원사</div>
+                    </div>`;
+                });
+                
+                resultHTML += `<br>우리가 사랑하는 채널을 후원하는 훌륭한 기업입니다. 돈쭐내주러 갑시다!`;
+                resultArea.innerHTML = resultHTML;
+                resultArea.style.color = "red";
+            } else {
+                resultArea.innerHTML = `검색된 제품이 없습니다.<br>(일반 제품이거나 명단에 없는 제품입니다.)`;
+                resultArea.style.color = "gray";
+            }
+        }
+
+        // 4. 바코드 스캔 성공 시 실행 (기존과 동일)
+        function onScanSuccess(decodedText, decodedResult) {
+            if (targetProducts[decodedText]) {
+                let product = targetProducts[decodedText];
+                let channelTags = product.channels.map(ch => `<span class="channel-tag">${ch}</span>`).join(" ");
+                
+                document.getElementById('result').innerHTML =
+                    `🎉 <b>${product.name}</b> 확인 완료!<br>
+                    <div class="product-card">
+                        <div>${channelTags} 후원사</div>
+                    </div><br>
+                    우리가 사랑하는 채널을 후원하는 훌륭한 기업입니다. 돈쭐내주러 갑시다!`;
+                document.getElementById('result').style.color = "red";
+            } else {
+                document.getElementById('result').innerHTML =
+                    `일반 제품이거나 명단에 없는 제품입니다.<br>(스캔 번호: ${decodedText})`;
+                document.getElementById('result').style.color = "gray";
+            }
+        }
+
+        // 4. 스캐너 가동 함수 (후면 카메라 강제 고정!)
+        function startScanner() {
+            const html5QrCode = new Html5Qrcode("reader");
+            
+            // facingMode: "environment" 가 바로 후면 카메라를 뜻해!
+            html5QrCode.start(
+                { facingMode: "environment" }, 
+                {
+                    fps: 10,
+                    qrbox: { width: 250, height: 250 }
+                },
+                onScanSuccess
+            ).catch(err => {
+                console.error("카메라 실행 에러:", err);
+                document.getElementById('result').innerText = "카메라를 켤 수 없습니다. 권한을 허용해주세요.";
+            });
+        }
+    </script>
+
+</body>
+</html>
