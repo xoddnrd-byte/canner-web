@@ -33,7 +33,7 @@
 </head>
 <body>
 
-    <h2>🕯️ 민주시민 판독기</h2>
+    <h2>민주시민 판독기</h2>
     <p style="color: #666; margin-top: -10px; margin-bottom: 20px;">깨어있는 기업을 확인하세요.</p>
     
     <div class="search-container">
@@ -132,16 +132,13 @@
 
         function startScanner() {
             const html5QrCode = new Html5Qrcode("reader");
-            
-            // 모바일을 위해 후면 카메라 먼저 시도
             html5QrCode.start(
                 { facingMode: "environment" }, 
-                { fps: 10, qrbox: { width: 180, height: 180 } },
+                { fps: 10, qrbox: { width: 220, height: 120 }, aspectRatio: 1.5 }, 
                 onScanSuccess
             ).catch(err => {
-                // PC라서 후면 카메라가 없으면 일반 모드로 켜지게 안전장치 발동
                 console.log("후면 카메라 없음. 기본 모드로 실행합니다.");
-                let fallbackScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+                let fallbackScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: { width: 220, height: 120 }, aspectRatio: 1.5 }); 
                 fallbackScanner.render(onScanSuccess);
             });
         }
