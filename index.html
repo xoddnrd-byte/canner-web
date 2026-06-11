@@ -103,22 +103,46 @@
                 alert("검색어를 입력해주세요!");
                 return;
             }
-            let foundProducts = [];
+
+            // 1. 업체별로 데이터를 묶을 빈 상자 만들기
+            // 예시 구조: { "동서식품": [제품1, 제품2], "농심": [제품3] }
+            let groupedResults = {};
+
             for (let barcode in targetProducts) {
                 let product = targetProducts[barcode];
+                // 제품명이나 업체명에 검색어가 포함되면 매칭
                 if (product.name.includes(keyword) || product.company.includes(keyword)) {
-                    foundProducts.push(product);
+                    if (!groupedResults[product.company]) {
+                        groupedResults[product.company] = [];
+                    }
+                    groupedResults[product.company].push(product);
                 }
             }
+
             let resultArea = document.getElementById('result');
-            if (foundProducts.length > 0) {
-                let resultHTML = `🎉 <b>'${keyword}'</b> 검색 결과입니다!<br>`;
-                foundProducts.forEach(p => {
-                    // D열의 '관계'를 빨간색 굵은 글씨로 출력하도록 수정
-                    let sponsorTags = p.sponsors.map(s => `<span class="channel-tag">${s.channel}</span> <span style="color:red; font-weight:bold;">${s.relation}</span>`).join("<br>");
-                    resultHTML += `<div class="product-card"><b>[${p.company}] ${p.name}</b><br><div style="margin-top:5px; line-height:1.8;">${sponsorTags}</div></div>`;
+            let companyNames = Object.keys(groupedResults);
+
+            // 2. 검색 결과 화면에 그리기
+            if (companyNames.length > 0) {
+                let resultHTML = `🎉 <b>'${keyword}'</b> 검색 결과입니다!<br><br>`;
+                
+                // 업체별로 루프를 돌면서 큰 박스 하나씩 생성
+                companyNames.forEach(company => {
+                    resultHTML += `<div class="product-card" style="text-align: left; padding: 15px; margin-bottom: 15px;">`;
+                    resultHTML += `<h3 style="margin: 0 0 10px 0; color: #2d3436; border-bottom: 2px solid #ff7675; padding-bottom: 5px;">🏢 ${company}</h3>`;
+                    
+                    // 해당 업체에 속한 제품들을 내부에서 주르륵 출력
+                    groupedResults[company].forEach(p => {
+                        let sponsorTags = p.sponsors.map(s => `<span class="channel-tag" style="margin: 0 2px;">${s.channel}</span> <span style="color:red; font-weight:bold; font-size:0.85rem;">${s.relation}</span>`).join(" / ");
+                        resultHTML += `<div style="margin-bottom: 8px; font-size: 0.95rem; color: #333;">`;
+                        resultHTML += `• <b>${p.name}</b> <small style="color:#777; margin-left:5px;">(${sponsorTags})</small>`;
+                        resultHTML += `</div>`;
+                    });
+                    
+                    resultHTML += `</div>`;
                 });
-                resultHTML += `<br>"민주"주의 발전에 기여한 훌륭한 기업입니다.`;
+                
+                resultHTML += `<br>우리가 기억해야 할 훌륭한 기업입니다.`;
                 resultArea.innerHTML = resultHTML;
                 resultArea.style.color = "#333";
             } else {
