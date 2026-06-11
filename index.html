@@ -50,10 +50,10 @@
         💡 제보 및 문의: right.is.right119@gmail.com
     </div>
 
-    <script>
+<script>
         let targetProducts = {};
         
-        // 💡 여기에 아까 잘 됐었던 진짜 구글시트 CSV 주소를 넣어줘!
+        // 💡 여기에 네 진짜 구글시트 CSV 주소를 넣어줘!
         const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnJSkURckZOyxBXLNIzUTvQWjW0tHUpIXDBIWgZwraUkynl3wT8kGn2r-4c30hmTJgHIh2-OdK2m-A/pub?output=csv";
 
         async function loadSheetData() {
@@ -67,16 +67,25 @@
                     if (!line) continue;
                     
                     const parts = line.split(",");
-                    if (parts.length >= 3) {
-                        const barcode = parts[0].trim();
-                        const productName = parts[1].trim();
-                        const channelName = parts[2].trim();
+                    // F열(index 5)까지 데이터가 잘 있는지 확인
+                    if (parts.length >= 6) {
+                        const companyName = parts[0].trim();  // A열: 업체명
+                        const productName = parts[1].trim();  // B열: 제품명
+                        const channelName = parts[2].trim();  // C열: 채널명
+                        const relationName = parts[3].trim(); // D열: 관계 (예: 광고모델, 공식후원)
+                        const barcode = parts[5].trim();      // F열: 바코드 (E열인 parts[4]는 건너뜀)
                         
+                        if (!barcode) continue;
+
+                        // 제품이 처음 등록될 때 데이터 구조 만들기
                         if (!targetProducts[barcode]) {
-                            targetProducts[barcode] = { name: productName, channels: [] };
+                            targetProducts[barcode] = { company: companyName, name: productName, sponsors: [] };
                         }
-                        if (!targetProducts[barcode].channels.includes(channelName)) {
-                            targetProducts[barcode].channels.push(channelName);
+                        
+                        // 중복 데이터 방지 후 채널과 관계를 세트로 저장
+                        const exists = targetProducts[barcode].sponsors.find(s => s.channel === channelName && s.relation === relationName);
+                        if (!exists) {
+                            targetProducts[barcode].sponsors.push({ channel: channelName, relation: relationName });
                         }
                     }
                 }
@@ -97,7 +106,7 @@
             let foundProducts = [];
             for (let barcode in targetProducts) {
                 let product = targetProducts[barcode];
-                if (product.name.includes(keyword)) {
+                if (product.name.includes(keyword) || product.company.includes(keyword)) {
                     foundProducts.push(product);
                 }
             }
@@ -105,12 +114,13 @@
             if (foundProducts.length > 0) {
                 let resultHTML = `🎉 <b>'${keyword}'</b> 검색 결과입니다!<br>`;
                 foundProducts.forEach(p => {
-                    let channelTags = p.channels.map(ch => `<span class="channel-tag">${ch}</span>`).join(" ");
-                    resultHTML += `<div class="product-card"><b>${p.name}</b><br><div>${channelTags} 후원사</div></div>`;
+                    // D열의 '관계'를 빨간색 굵은 글씨로 출력하도록 수정
+                    let sponsorTags = p.sponsors.map(s => `<span class="channel-tag">${s.channel}</span> <span style="color:red; font-weight:bold;">${s.relation}</span>`).join("<br>");
+                    resultHTML += `<div class="product-card"><b>[${p.company}] ${p.name}</b><br><div style="margin-top:5px; line-height:1.8;">${sponsorTags}</div></div>`;
                 });
-                resultHTML += `<br>우리가 사랑하는 채널을 후원하는 훌륭한 기업입니다. 돈쭐내주러 갑시다!`;
+                resultHTML += `<br>우리가 기억해야 할 훌륭한 기업입니다.`;
                 resultArea.innerHTML = resultHTML;
-                resultArea.style.color = "red";
+                resultArea.style.color = "#333";
             } else {
                 resultArea.innerHTML = `검색된 제품이 없습니다.<br>(일반 제품이거나 명단에 없는 제품입니다.)`;
                 resultArea.style.color = "gray";
@@ -120,10 +130,11 @@
         function onScanSuccess(decodedText, decodedResult) {
             if (targetProducts[decodedText]) {
                 let product = targetProducts[decodedText];
-                let channelTags = product.channels.map(ch => `<span class="channel-tag">${ch}</span>`).join(" ");
+                // D열의 '관계'를 빨간색 굵은 글씨로 출력하도록 수정
+                let sponsorTags = product.sponsors.map(s => `<span class="channel-tag">${s.channel}</span> <span style="color:red; font-weight:bold;">${s.relation}</span>`).join("<br>");
                 document.getElementById('result').innerHTML =
-                    `🎉 <b>${product.name}</b> 확인 완료!<br><div class="product-card"><div>${channelTags} 후원사</div></div><br>우리가 사랑하는 채널을 후원하는 훌륭한 기업입니다. 돈쭐내주러 갑시다!`;
-                document.getElementById('result').style.color = "red";
+                    `🎉 <b>[${product.company}] ${product.name}</b> 확인 완료!<br><div class="product-card"><div style="line-height:1.8;">${sponsorTags}</div></div><br>우리가 기억해야 할 훌륭한 기업입니다.`;
+                document.getElementById('result').style.color = "#333";
             } else {
                 document.getElementById('result').innerHTML = `일반 제품이거나 명단에 없는 제품입니다.<br>(스캔 번호: ${decodedText})`;
                 document.getElementById('result').style.color = "gray";
