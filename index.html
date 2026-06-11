@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PPL 착한기업 판별기</title>
+    <title>민주시민 판독기</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         body { text-align: center; font-family: sans-serif; padding: 20px; }
-        #reader { width: 100%; max-width: 400px; margin: 0 auto; }
+        #reader { width: 100%; max-width: 280px; margin: 0 auto; border-radius: 15px; overflow: hidden; border: 2px solid #eee; }
         #result { margin-top: 20px; font-weight: bold; color: blue; font-size: 1.1rem; line-height: 1.5; }
         .channel-tag { background-color: #ffeaa7; padding: 3px 8px; border-radius: 5px; font-size: 0.9rem; margin: 2px; display: inline-block; }
         .search-container { margin: 20px 0; }
@@ -26,14 +26,15 @@
 
     <link rel="icon" href="./favicon.png" type="image/png">
 
-    <meta property="og:title" content="PPL 착한기업 판별기">
-    <meta property="og:description" content="우리가 사랑하는 채널을 후원하는 훌륭한 기업인지 바코드로 바로 확인하세요!">
+    <meta property="og:title" content="민주시민 판독기">
+    <meta property="og:description" content="깨어있는 기업을 확인하세요.">
     <meta property="og:image" content="https://canner-web.vercel.app/og-image.jpg">
     <meta property="og:url" content="https://canner-web.vercel.app">
 </head>
 <body>
 
-    <h2>🔍 훌륭한 후원사 제품인지 확인하세요!</h2>
+    <h2>🕯️ 민주시민 판독기</h2>
+    <p style="color: #666; margin-top: -10px; margin-bottom: 20px;">깨어있는 기업을 확인하세요.</p>
     
     <div class="search-container">
         <input type="text" id="searchInput" placeholder="제품명이나 브랜드 입력">
@@ -135,7 +136,7 @@
             // 모바일을 위해 후면 카메라 먼저 시도
             html5QrCode.start(
                 { facingMode: "environment" }, 
-                { fps: 10, qrbox: { width: 250, height: 250 } },
+                { fps: 10, qrbox: { width: 180, height: 180 } },
                 onScanSuccess
             ).catch(err => {
                 // PC라서 후면 카메라가 없으면 일반 모드로 켜지게 안전장치 발동
