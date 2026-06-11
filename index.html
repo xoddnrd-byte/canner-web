@@ -58,7 +58,7 @@
 
         async function loadSheetData() {
             try {
-                const response = await fetch(GOOGLE_SHEET_CSV_URL);
+                const response = await fetch(GOOGLE_SHEET_CSV_URL, { cache: "no-store" });
                 const csvText = await response.text();
                 const lines = csvText.split("\n");
                 
