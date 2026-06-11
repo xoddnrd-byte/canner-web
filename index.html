@@ -118,7 +118,7 @@
                     let sponsorTags = p.sponsors.map(s => `<span class="channel-tag">${s.channel}</span> <span style="color:red; font-weight:bold;">${s.relation}</span>`).join("<br>");
                     resultHTML += `<div class="product-card"><b>[${p.company}] ${p.name}</b><br><div style="margin-top:5px; line-height:1.8;">${sponsorTags}</div></div>`;
                 });
-                resultHTML += `<br>우리가 기억해야 할 훌륭한 기업입니다.`;
+                resultHTML += `<br>"민주"주의 발전에 기여한 훌륭한 기업입니다.`;
                 resultArea.innerHTML = resultHTML;
                 resultArea.style.color = "#333";
             } else {
@@ -133,7 +133,7 @@
                 // D열의 '관계'를 빨간색 굵은 글씨로 출력하도록 수정
                 let sponsorTags = product.sponsors.map(s => `<span class="channel-tag">${s.channel}</span> <span style="color:red; font-weight:bold;">${s.relation}</span>`).join("<br>");
                 document.getElementById('result').innerHTML =
-                    `🎉 <b>[${product.company}] ${product.name}</b> 확인 완료!<br><div class="product-card"><div style="line-height:1.8;">${sponsorTags}</div></div><br>우리가 기억해야 할 훌륭한 기업입니다.`;
+                    `🎉 <b>[${product.company}] ${product.name}</b> 확인 완료!<br><div class="product-card"><div style="line-height:1.8;">${sponsorTags}</div></div><br>"민주"주의 발전에 기여한 훌륭한 기업입니다.`;
                 document.getElementById('result').style.color = "#333";
             } else {
                 document.getElementById('result').innerHTML = `일반 제품이거나 명단에 없는 제품입니다.<br>(스캔 번호: ${decodedText})`;
