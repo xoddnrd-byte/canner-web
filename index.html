@@ -69,11 +69,11 @@
         </div>
     </div>
 
-<script>
+    <script>
         let targetProducts = {};
         
         // 💡 여기에 네 진짜 구글시트 CSV 주소를 넣어줘!
-        const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRnJSkURckZOyxBXLNIzUTvQWjW0tHUpIXDBIWgZwraUkynl3wT8kGn2r-4c30hmTJgHIh2-OdK2m-A/pub?output=csv";
+        const GOOGLE_SHEET_CSV_URL = "여기에_구글시트_주소_넣기";
 
         async function loadSheetData() {
             try {
@@ -120,12 +120,16 @@
                 return;
             }
 
-            // 1. 검색어와 일치하는 '업체명'을 모두 수집
+            // 1. 업체명, 제품명뿐만 아니라 '채널명'이나 '관계(모델)'에 검색어가 포함된 업체도 수집
             let matchedCompanies = new Set();
             for (let barcode in targetProducts) {
                 let p = targetProducts[barcode];
-                // 제품명이나 업체명에 검색어가 포함되면 그 업체를 기억함
-                if (p.name.includes(keyword) || p.company.includes(keyword)) {
+                
+                // 해당 제품의 스폰서 목록(채널, 관계) 중 검색어와 일치하는 게 있는지 확인
+                let hasSponsorMatch = p.sponsors.some(s => s.channel.includes(keyword) || s.relation.includes(keyword));
+
+                // 셋 중 하나라도 해당되면 그 업체를 결과에 포함!
+                if (p.name.includes(keyword) || p.company.includes(keyword) || hasSponsorMatch) {
                     matchedCompanies.add(p.company);
                 }
             }
@@ -153,8 +157,10 @@
                     resultHTML += `<h3 style="margin: 0 0 10px 0; color: #2d3436; border-bottom: 2px solid #ff7675; padding-bottom: 5px;">🏢 ${company}</h3>`;
                     
                     groupedResults[company].forEach(p => {
-                        // 내가 검색한 정확한 제품은 강조 표시(👉), 나머지는 일반 점(•)
-                        let isMatchedProduct = p.name.includes(keyword);
+                        // 내가 검색한 정확한 제품이거나 검색한 '채널/모델'이 포함된 제품은 강조 표시(👉)
+                        let hasSponsorMatch = p.sponsors.some(s => s.channel.includes(keyword) || s.relation.includes(keyword));
+                        let isMatchedProduct = p.name.includes(keyword) || hasSponsorMatch;
+                        
                         let mark = isMatchedProduct ? "👉" : "•";
                         let nameStyle = isMatchedProduct ? "color: #d63031; font-weight: 900;" : "color: #333;";
 
@@ -182,7 +188,6 @@
                 let scannedProduct = targetProducts[decodedText];
                 let company = scannedProduct.company;
 
-                // 바코드 스캔 시 해당 업체의 모든 제품 찾기
                 let companyProducts = [];
                 for (let barcode in targetProducts) {
                     if (targetProducts[barcode].company === company) {
@@ -195,7 +200,6 @@
                 resultHTML += `<h3 style="margin: 0 0 10px 0; color: #2d3436; border-bottom: 2px solid #ff7675; padding-bottom: 5px;">🏢 ${company}의 전체 후원 명단</h3>`;
 
                 companyProducts.forEach(p => {
-                    // 스캔한 정확한 제품은 강조 표시(👉), 나머지는 일반 점(•)
                     let isScanned = (p.name === scannedProduct.name);
                     let mark = isScanned ? "👉" : "•";
                     let nameStyle = isScanned ? "color: #d63031; font-weight: 900;" : "color: #333;";
